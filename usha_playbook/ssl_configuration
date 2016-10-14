@@ -1,0 +1,7 @@
+<VirtualHost www.ec2-54-186-73-139.us-west-2.compute.amazonaws.com:443>
+DocumentRoot /var/www/html
+ServerName www.ec2-54-186-73-139.us-west-2.compute.amazonaws.com
+SSLEngine on
+SSLCertificateFile /etc/pki/tls/server.crt
+SSLCertificateKeyFile /etc/pki/tls/server.key
+</VirtualHost>

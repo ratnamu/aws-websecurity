@@ -1,0 +1,44 @@
+--- 
+  - hosts: [webservers]
+    remote_user: ec2-user
+
+    vars: 
+     http_port: 80
+
+    tasks: 
+
+          - name: Install Apache
+            yum: name=httpd state=installed 
+            become_user: root
+            become: true 
+
+          - name: Write the apache config file
+            template: src=/home/ec2-user/ansible/usha_playbook/http_conf_file_setup dest=/etc/httpd.conf 
+            become_user: root
+            become: true
+            notify: 
+            - restart apache
+
+
+          - name: Start Apache
+            service: name=httpd state=started enabled=yes
+            become_user: root
+            become: true 
+
+          - name: Write the static web page
+            template: src=/home/ec2-user/ansible/usha_playbook/default_html_page dest=/var/www/html/index.html
+            become_user: root
+            become: true
+
+          - shell: /home/ec2-user/ansible/usha_playbook/ssl_config_script.sh chdir=/etc/pki/tls/
+            notify:
+            - restart apache
+
+          - shell: /home/ec2-user/ansible/usha_playbook/validate_apache_config.sh
+
+    handlers:
+
+          - name: restart apache
+            service: name=httpd state=restarted
+            become_user: root
+            become: true

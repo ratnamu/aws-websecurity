@@ -30,11 +30,13 @@
             become_user: root
             become: true
 
-          - shell: /home/ec2-user/ansible/usha_playbook/ssl_config_script.sh chdir=/etc/pki/tls/
+          - name: Configure SSL certificates and HTTPS
+            shell: /home/ec2-user/ansible/usha_playbook/ssl_config_script.sh chdir=/etc/pki/tls/
             notify:
             - restart apache
 
-          - shell: /home/ec2-user/ansible/usha_playbook/validate_apache_config.sh
+          - name: Validate apache configuration
+            shell: /home/ec2-user/ansible/usha_playbook/validate_apache_config.sh
 
     handlers:
 

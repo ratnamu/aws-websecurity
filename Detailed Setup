@@ -1,0 +1,160 @@
+### Steps to set up a AWS EC2 instance 
+### 
+
+Set AWS account
+Launch two EC2 instances ( used redhat instances)
+Get the SSH key from EC2 help and use puttygen to get the .ppk file from .perm (given by EC2 help)
+Enable the putty->connection->ssh->auth-> Allow attempted changes of username in SSH-2 setting, browse and slect the perm file from EC@ and the login to the instance
+
+#### Steps to configure the instance for the project
+#### Includes GIT installation, Ansible Installation, Apache installation using Ansible
+
+Git was unavailable , so Install GIT
+        sudo yum install git
+Install Ansible (chosen configuration management tool)
+      git clone git://github.com/ansible/ansible.git --recursive
+      cd ansible/
+      source ./hacking/env-setup
+      export ANSIBLE_INVENTORY=~/ansible_hosts
+Set up public RSA key for ansible to work
+      ssh-keygen -t rsa
+In the new AWS instance repeat steps to login into the instance and then copy the id_rsa.pub to ~/.ssh/authorised_keys of new instance
+From the first host try ansible all -m ping
+The command should work
+See below output
+      [ec2-user@ip-172-31-35-68 ~]$ ansible all -m ping
+ip-172-31-17-187.us-west-2.compute.internal | SUCCESS => {
+    "changed": false,
+    "ping": "pong"
+}
+
+[ec2-user@ip-172-31-35-68 ~]$ ansible all -m shell -a 'date'
+ip-172-31-17-187.us-west-2.compute.internal | SUCCESS | rc=0 >>
+Thu Oct 13 17:44:57 EDT 2016
+
+[ec2-user@ip-172-31-35-68 ~]$
+#### Creating a Ansible PlayBook
+
+Now create a ansible Playbook
+
+
+######
+
+[ec2-user@ip-172-31-35-68 usha_playbook]$ cat configure_web_server.yml
+---
+  - hosts: [webservers]
+    remote_user: ec2-user
+
+    vars:
+     http_port: 80
+
+    tasks:
+
+          - name: Install Apache
+            yum: name=httpd state=installed
+            become_user: root
+            become: true
+
+[ec2-user@ip-172-31-35-68 usha_playbook]$ cat ~/ansible_hosts
+[webservers]
+ip-172-31-17-187.us-west-2.compute.internal
+[ec2-user@ip-172-31-35-68 usha_playbook]$
+
+
+[ec2-user@ip-172-31-35-68 usha_playbook]$ ansible-playbook configure_web_server.yml
+
+PLAY [webservers] **************************************************************
+
+TASK [setup] *******************************************************************
+ok: [ip-172-31-17-187.us-west-2.compute.internal]
+
+TASK [Install Apache] **********************************************************
+ok: [ip-172-31-17-187.us-west-2.compute.internal]
+
+TASK [Start Apache] ************************************************************
+changed: [ip-172-31-17-187.us-west-2.compute.internal]
+
+PLAY RECAP *********************************************************************
+ip-172-31-17-187.us-west-2.compute.internal : ok=3    changed=1    unreachable=0    failed=0
+
+### Updated yml file for SSL generation
+###
+
+[ec2-user@ip-172-31-35-68 usha_playbook]$ cat configure_web_server.yml
+---
+  - hosts: [webservers]
+    remote_user: ec2-user
+
+    vars:
+     http_port: 80
+
+    tasks:
+
+          - name: Install Apache
+            yum: name=httpd state=installed
+            become_user: root
+            become: true
+
+          - name: Write the apache config file
+            template: src=/home/ec2-user/ansible/usha_playbook/http_conf_file_setup dest=/etc/httpd.conf
+            become_user: root
+            become: true
+
+
+          - name: Start Apache
+            service: name=httpd state=restarted enabled=yes
+            become_user: root
+            become: true
+
+          - name: Write the static web page
+            template: src=/home/ec2-user/ansible/usha_playbook/default_html_page dest=/var/www/html/index.html
+            become_user: root
+            become: true
+
+          - shell: ssl_config_script.sh >> ssl_config_log
+
+
+### Default html Page
+
+[ec2-user@ip-172-31-35-68 usha_playbook]$ cat default_html_page
+<html>
+
+<head>
+
+<title>Hello World</title>
+
+</head>
+
+<body>
+
+<h1>Hello World! This is Usha</h1>
+
+</body>
+
+</html>
+
+[ec2-user@ip-172-31-35-68 usha_playbook]$ cat ssl_config_script.sh
+cd /etc/pki/tls/
+sudo openssl req -x509 -nodes -days 365 -newkey rsa:2048 -keyout mysitename.key -out mysitename.crt
+ls mysitename.key mysitename.crt
+if [[ $? -eq 0 ]]
+then
+        echo "SSL keys generated"
+else
+        echo "ERROR:SSL Keys not generated"
+fi
+
+cat ssl_configuration >> /etc/httpd/conf/httpd.conf
+
+[ec2-user@ip-172-31-35-68 usha_playbook]$ cat ssl_configuration
+<VirtualHost www.ec2-54-186-73-139.us-west-2.compute.amazonaws.com:443>
+DocumentRoot /var/www/html
+ServerName www.ec2-54-186-73-139.us-west-2.compute.amazonaws.com
+SSLEngine on
+SSLCertificateFile /etc/pki/tls/mysitename.crt
+SSLCertificateKeyFile /etc/pki/tls/mysitename.key
+</VirtualHost>
+
+
+
+

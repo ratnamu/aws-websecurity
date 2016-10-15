@@ -155,6 +155,168 @@ SSLCertificateFile /etc/pki/tls/mysitename.crt
 SSLCertificateKeyFile /etc/pki/tls/mysitename.key
 </VirtualHost>
 
+[ec2-user@ip-172-31-35-68 ansible]$ cd usha_playbook/
+[ec2-user@ip-172-31-35-68 usha_playbook]$ ansible-playbook configure_web_server.yml
+
+PLAY [webservers] **************************************************************
+
+TASK [setup] *******************************************************************
+ok: [ip-172-31-17-187.us-west-2.compute.internal]
+
+TASK [Install Apache] **********************************************************
+ok: [ip-172-31-17-187.us-west-2.compute.internal]
+
+TASK [Write the apache config file] ********************************************
+changed: [ip-172-31-17-187.us-west-2.compute.internal]
+
+TASK [Start Apache] ************************************************************
+ok: [ip-172-31-17-187.us-west-2.compute.internal]
+
+TASK [Write the static web page] ***********************************************
+ok: [ip-172-31-17-187.us-west-2.compute.internal]
+
+TASK [command] *****************************************************************
+changed: [ip-172-31-17-187.us-west-2.compute.internal]
+
+TASK [command] *****************************************************************
+changed: [ip-172-31-17-187.us-west-2.compute.internal]
+
+RUNNING HANDLER [restart apache] ***********************************************
+changed: [ip-172-31-17-187.us-west-2.compute.internal]
+
+PLAY RECAP *********************************************************************
+ip-172-31-17-187.us-west-2.compute.internal : ok=8    changed=4    unreachable=0    failed=0
+
+[ec2-user@ip-172-31-35-68 usha_playbook]$ ls
+configure_web_server.retry  configure_web_server.yml  default_html_page  http_conf_file_setup  ssl_config_script.sh  ssl_configuration  validate_apache_config.sh
+[ec2-user@ip-172-31-35-68 usha_playbook]$ vi configure_web_server.yml
+[ec2-user@ip-172-31-35-68 usha_playbook]$ vi ssl_config_script.sh
+[ec2-user@ip-172-31-35-68 usha_playbook]$ cat ssl_configuration
+<VirtualHost www.ec2-54-186-73-139.us-west-2.compute.amazonaws.com:443>
+DocumentRoot /var/www/html
+ServerName www.ec2-54-186-73-139.us-west-2.compute.amazonaws.com
+SSLEngine on
+SSLCertificateFile /etc/pki/tls/server.crt
+SSLCertificateKeyFile /etc/pki/tls/server.key
+</VirtualHost>
+[ec2-user@ip-172-31-35-68 usha_playbook]$ pwd
+/home/ec2-user/ansible/usha_playbook
+
+##### http.conf file
+ServerRoot "/etc/httpd"
+
+
+Include conf.modules.d/*.conf
+
+User apache
+Group www
+
+
+ServerAdmin root@localhost
+
+ServerName www.ec2-54-186-73-139.us-west-2.compute.amazonaws.com
+
+<Directory />
+    AllowOverride none
+    Require all granted
+</Directory>
+
+
+DocumentRoot "/var/www/html"
+
+<Directory "/var/www">
+    AllowOverride None
+    Require all granted
+</Directory>
+
+<Directory "/var/www/html">
+    Options Indexes FollowSymLinks Includes ExecCGI
+
+    AllowOverride All
+Require all granted
+</Directory>
+
+<IfModule dir_module>
+    DirectoryIndex index.html
+</IfModule>
+
+<Files ".ht*">
+    Require all denied
+</Files>
+
+ErrorLog "logs/error_log"
+
+LogLevel warn
+
+<IfModule log_config_module>
+    LogFormat "%h %l %u %t \"%r\" %>s %b \"%{Referer}i\" \"%{User-Agent}i\"" combined
+    LogFormat "%h %l %u %t \"%r\" %>s %b" common
+
+    <IfModule logio_module>
+      LogFormat "%h %l %u %t \"%r\" %>s %b \"%{Referer}i\" \"%{User-Agent}i\" %I %O" combinedio
+    </IfModule>
+
+
+    CustomLog "logs/access_log" combined
+</IfModule>
+
+<IfModule alias_module>
+
+
+
+    ScriptAlias /cgi-bin/ "/var/www/cgi-bin/"
+
+</IfModule>
+
+<Directory "/var/www/cgi-bin">
+    AllowOverride None
+    Options None
+    Require all granted
+</Directory>
+
+<IfModule mime_module>
+    TypesConfig /etc/mime.types
+
+    AddType application/x-compress .Z
+    AddType application/x-gzip .gz .tgz
+
+
+
+    AddType text/html .shtml
+    AddOutputFilter INCLUDES .shtml
+</IfModule>
+
+AddDefaultCharset UTF-8
+
+<IfModule mime_magic_module>
+    MIMEMagicFile conf/magic
+</IfModule>
+
+ErrorDocument 404 /missing.html
+ErrorDocument 403 /Page-Not-Found.html
+
+EnableSendfile on
+
+IncludeOptional conf.d/*.conf
+
+<VirtualHost www.ec2-54-186-73-139.us-west-2.compute.amazonaws.com:80>
+DocumentRoot /var/www/html
+ServerName www.ec2-54-186-73-139.us-west-2.compute.amazonaws.com
+Redirect permanent / https://ec2-54-186-73-139.us-west-2.compute.amazonaws.com/
+</VirtualHost>
+
+<VirtualHost www.ec2-54-186-73-139.us-west-2.compute.amazonaws.com:443>
+DocumentRoot /var/www/html
+ServerName www.ec2-54-186-73-139.us-west-2.compute.amazonaws.com
+SSLEngine on
+SSLCertificateFile /etc/pki/tls/mysitename.crt
+SSLCertificateKeyFile /etc/pki/tls/mysitename.key
+</VirtualHost>
+
+
+### Ensure owner/group of apache dirs as specified by http.conf
+
+#### use curl or wget for URL verification
 
 
 

@@ -13,9 +13,9 @@ This project involves the following steps or procedure:
       
       
     Procedure:
-      1) Procure instances of AWS EC2 machines for deployment
-      2) One server is configured as ansible host by installing ansible and writing the playbooks and configuring the ssh login`
-      3) Playbook does the following
+      a) Procure instances of AWS EC2 machines for deployment
+      b) One server is configured as ansible host by installing ansible and writing the playbooks and configuring the ssh login`
+      c) Playbook does the following
           GIT checkout of the ansible playbook [ in common role of playbook]
           Install apache
           Modify the httpd.conf file as per the template, store the template and modify as per the dns_name
@@ -23,10 +23,13 @@ This project involves the following steps or procedure:
           Load the default web page 
           Configure SSL certificates and HTTPS
           Restart apache on any httpd.conf changes
-      4) Validate the configuration of the web server using automation. This involves another playbook
+          
+2) Validate the configuration of the web server using automation. This involves another playbook
           PlayBook Does the following
-          Check for running http process
-          Verify if the status code of the secure URL is the 200 OK code
+           a) Check for running http process
+           b) Verify if the status code of the secure URL is the 200 OK code, which is the successful code
+          
+          
           
           For more details on command used and their outputs, please refer readme.us
           

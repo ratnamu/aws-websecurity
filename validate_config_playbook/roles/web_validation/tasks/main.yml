@@ -1,0 +1,2 @@
+          - name: Validate apache configuration
+            shell: /home/ec2-user/ansible/validate_config_playbook/roles/web_validation/files/validate_apache_config.sh

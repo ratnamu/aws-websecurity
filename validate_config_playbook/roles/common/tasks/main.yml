@@ -1,0 +1,2 @@
+ - name: GIT checkout  
+   git: repo=https://github.com/ratnamu/aws-websecurity dest=~/ansible clone=yes

@@ -1,0 +1,27 @@
+          - name: Install Apache
+            yum: name=httpd state=installed 
+            become_user: root
+            become: true 
+
+          - name: Write the apache config file
+            template: src=/home/ec2-user/ansible/ansible_playbook/roles/webserver/templates/http.conf.j2 dest=/etc/httpd.conf 
+            become_user: root
+            become: true
+            notify: 
+            - restart apache
+
+
+          - name: Start Apache
+            service: name=httpd state=started enabled=yes
+            become_user: root
+            become: true 
+
+          - name: Write the static web page
+            template: src=/home/ec2-user/ansible/ansible_playbook/roles/webserver/files/default_html_page dest=/var/www/html/index.html
+            become_user: root
+            become: true
+
+          - name: Configure SSL certificates and HTTPS
+            shell: /home/ec2-user/ansible/ansible_playbook/roles/webserver/files/ssl_config_script.sh chdir=/etc/pki/tls/
+            notify:
+            - restart apache

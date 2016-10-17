@@ -1,4 +1,5 @@
 - hosts: webservers
 
   roles:
-    - common web_validation
+    - common 
+    - web_validation
